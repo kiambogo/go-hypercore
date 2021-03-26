@@ -1,4 +1,4 @@
-package hypercore
+package mempager
 
 const DEFAULT_PAGE_SIZE = 1024
 
