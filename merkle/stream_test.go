@@ -87,9 +87,8 @@ func Benchmark_Blake2BStream10000(b *testing.B) {
 }
 
 func benchmarkBlake2BStream(i int, b *testing.B) {
-	stream := NewStream(blake2bHasher, nil, nil)
-
 	for n := 0; n < b.N; n++ {
+		stream := NewStream(blake2bHasher, nil, nil)
 		for j := 0; j < i; j++ {
 			stream.Append([]byte(fmt.Sprint(j)))
 		}
