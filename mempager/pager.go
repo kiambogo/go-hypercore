@@ -89,9 +89,12 @@ func (p *Pager) Set(pageNum int, data []byte) {
 
 // growPages will increases the size of the pager's page buffer up till the supplied index
 func (p *Pager) growPages(index int) {
-	for i := len(p.pages); i <= index; i++ {
-		p.pages = append(p.pages, nil)
+	diff := index - len(p.pages)
+	if diff <= 0 {
+		return
 	}
+	padding := make([]*Page, diff+1)
+	p.pages = append(p.pages, padding...)
 }
 
 func (p Pager) truncate(buf []byte) []byte {
