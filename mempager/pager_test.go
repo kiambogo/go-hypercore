@@ -96,3 +96,19 @@ func Test_Pager_CantReplacePageBufferPointer(t *testing.T) {
 	buf = checkpage.Buffer()
 	assert.Equal(t, make([]byte, DEFAULT_PAGE_SIZE), *buf)
 }
+
+func Benchmark_PagerGrowPages100(b *testing.B) {
+	benchmarkPagerPageGrowth(100, b)
+}
+
+func Benchmark_PagerGrowPages100000(b *testing.B) {
+	benchmarkPagerPageGrowth(100000, b)
+}
+
+func benchmarkPagerPageGrowth(i int, b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		pgr := NewPager(0)
+		pgr.GetOrAlloc(1)
+		pgr.GetOrAlloc(i)
+	}
+}
