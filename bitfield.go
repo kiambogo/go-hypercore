@@ -18,7 +18,9 @@ func NewBitfield(pageSize int) *Bitfield {
 func (b *Bitfield) SetBit(index int, value bool) bool {
 	byteIndex := uint64(index / 8) // 8 bits in a byte
 	byteAtOffset := b.GetByte(byteIndex)
-	bitIndex := uint8(index%8) + 1
+
+	bitIndex := byte(1 << (index % 8))
+
 	if bitAlreadySet := byteAtOffset&bitIndex == 1; bitAlreadySet {
 		return false
 	}
