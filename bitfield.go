@@ -5,7 +5,8 @@ import (
 )
 
 type Bitfield struct {
-	pager *mempager.Pager
+	pager      *mempager.Pager
+	byteLength uint64
 }
 
 func NewBitfield(pageSize int) *Bitfield {
@@ -16,6 +17,11 @@ func NewBitfield(pageSize int) *Bitfield {
 // PageSize returns the size of the pages used by the internal pager
 func (b Bitfield) PageSize() int {
 	return b.pager.PageSize()
+}
+
+// ByteLength returns the number of bytes in the bitfield
+func (b Bitfield) ByteLength() uint64 {
+	return b.byteLength
 }
 
 // SetBit sets the bit at a particular index within the bitfield
@@ -41,6 +47,12 @@ func (b *Bitfield) SetByte(index uint64, value byte) bool {
 	offset := index % uint64(b.pager.PageSize())
 	page := b.pager.GetOrAlloc(int(pageIndex))
 	pageBuffer := page.Buffer()
+
+	// Update the byte length of the bitfield
+	if index >= b.byteLength {
+		b.byteLength = index + 1
+	}
+
 	if (*pageBuffer)[offset] == value {
 		return false
 	}
