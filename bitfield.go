@@ -24,6 +24,11 @@ func (b Bitfield) ByteLength() uint64 {
 	return b.byteLength
 }
 
+// Len returns the number of bits set in the bitfield
+func (b Bitfield) Len() uint64 {
+	return b.byteLength * 8
+}
+
 // SetBit sets the bit at a particular index within the bitfield
 // Returns true if a change was inacted
 func (b *Bitfield) SetBit(index int, value bool) bool {
