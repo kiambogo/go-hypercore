@@ -29,6 +29,11 @@ func (b Bitfield) Len() uint64 {
 	return b.byteLength * 8
 }
 
+// IsEmpty returns true if no bits are stored in the bitfield
+func (b Bitfield) IsEmpty() bool {
+	return b.pager.IsEmpty()
+}
+
 // SetBit sets the bit at a particular index within the bitfield
 // Returns true if a change was inacted
 func (b *Bitfield) SetBit(index int, value bool) bool {
