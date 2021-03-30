@@ -45,7 +45,10 @@ func (b *Bitfield) SetByte(index uint64, value byte) bool {
 
 // GetBit returns the value of the bit at a provided index
 func (b *Bitfield) GetBit(index uint64) bool {
-	return false
+	byteAtOffset := b.GetByte((index / 8))
+	bitIndex := byte(1 << (index % 8))
+
+	return byteAtOffset&bitIndex > 0
 }
 
 // GetByte returns the value of the byte at a provided index
