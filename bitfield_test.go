@@ -42,6 +42,15 @@ func Test_Bitfield_Len(t *testing.T) {
 	assert.Equal(t, uint64(104), bitField.Len())
 }
 
+func Test_Bitfield_IsEmpty(t *testing.T) {
+	t.Parallel()
+
+	bitField := NewBitfield(100)
+	assert.True(t, bitField.IsEmpty())
+	bitField.SetBit(10, true)
+	assert.False(t, bitField.IsEmpty())
+}
+
 func Test_Bitfield_SetByte(t *testing.T) {
 	t.Parallel()
 
