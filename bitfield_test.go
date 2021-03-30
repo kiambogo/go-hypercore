@@ -39,6 +39,8 @@ func Test_Bitfield_SetByteTwice(t *testing.T) {
 }
 
 func Test_Bitfield_SetBit(t *testing.T) {
+	t.Parallel()
+
 	bitField := NewBitfield(0)
 
 	bitChanged := bitField.SetBit(0, true)
@@ -87,4 +89,25 @@ func Test_Bitfield_SetBit(t *testing.T) {
 	assert.Equal(t, byte(0xff), updatedByte)
 	updatedByte = bitField.GetByte(1)
 	assert.Equal(t, byte(0x1), updatedByte)
+}
+
+func Test_Bitfield_GetBit(t *testing.T) {
+	t.Parallel()
+
+	bitfield := NewBitfield(0)
+
+	_ = bitfield.SetBit(1, true)
+	assert.Equal(t, true, bitfield.GetBit(1))
+
+	_ = bitfield.SetBit(8, true)
+	assert.Equal(t, true, bitfield.GetBit(8))
+
+	_ = bitfield.SetBit(42, true)
+	assert.Equal(t, true, bitfield.GetBit(42))
+
+	_ = bitfield.SetBit(142, true)
+	assert.Equal(t, true, bitfield.GetBit(142))
+
+	_ = bitfield.SetBit(1420, true)
+	assert.Equal(t, true, bitfield.GetBit(1420))
 }
