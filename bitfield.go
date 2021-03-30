@@ -13,6 +13,11 @@ func NewBitfield(pageSize int) *Bitfield {
 	return &Bitfield{pager: &pgr}
 }
 
+// PageSize returns the size of the pages used by the internal pager
+func (b Bitfield) PageSize() int {
+	return b.pager.PageSize()
+}
+
 // SetBit sets the bit at a particular index within the bitfield
 // Returns true if a change was inacted
 func (b *Bitfield) SetBit(index int, value bool) bool {
