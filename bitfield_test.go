@@ -29,6 +29,19 @@ func Test_Bitfield_ByteLength(t *testing.T) {
 	assert.Equal(t, uint64(13), bitField.ByteLength())
 }
 
+func Test_Bitfield_Len(t *testing.T) {
+	t.Parallel()
+
+	bitField := NewBitfield(100)
+	assert.Equal(t, uint64(0), bitField.Len())
+	bitField.SetBit(10, true)
+	assert.Equal(t, uint64(16), bitField.Len())
+	bitField.SetBit(100, true)
+	assert.Equal(t, uint64(104), bitField.Len())
+	bitField.SetBit(101, true)
+	assert.Equal(t, uint64(104), bitField.Len())
+}
+
 func Test_Bitfield_SetByte(t *testing.T) {
 	t.Parallel()
 
