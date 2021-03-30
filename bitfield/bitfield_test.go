@@ -1,4 +1,4 @@
-package hypercore
+package bitfield
 
 import (
 	"testing"
