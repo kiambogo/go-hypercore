@@ -6,6 +6,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func Test_Bitfield_PageSize(t *testing.T) {
+	t.Parallel()
+
+	bitField := NewBitfield(100)
+	assert.Equal(t, 100, bitField.PageSize())
+
+	bitField = NewBitfield(200)
+	assert.Equal(t, 200, bitField.PageSize())
+}
+
 func Test_Bitfield_SetByte(t *testing.T) {
 	t.Parallel()
 
