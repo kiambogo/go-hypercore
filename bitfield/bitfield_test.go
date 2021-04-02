@@ -134,6 +134,26 @@ func Test_Bitfield_SetBit(t *testing.T) {
 	assert.Equal(t, byte(0xff), updatedByte)
 	updatedByte = bitField.GetByte(1)
 	assert.Equal(t, byte(0x1), updatedByte)
+
+	bitChanged = bitField.SetBit(8, false)
+	updatedByte = bitField.GetByte(1)
+	assert.True(t, bitChanged)
+	assert.Equal(t, byte(0x0), updatedByte)
+}
+
+func Test_Bitfield_SetBitTwice(t *testing.T) {
+	t.Parallel()
+
+	bitField := NewBitfield(0)
+	changed := bitField.SetBit(0, true)
+	assert.True(t, changed)
+	changed = bitField.SetBit(0, true)
+	assert.False(t, changed)
+
+	changed = bitField.SetBit(0, false)
+	assert.True(t, changed)
+	changed = bitField.SetBit(0, false)
+	assert.False(t, changed)
 }
 
 func Test_Bitfield_GetBit(t *testing.T) {

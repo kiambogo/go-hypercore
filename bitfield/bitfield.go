@@ -42,10 +42,16 @@ func (b *Bitfield) SetBit(index int, value bool) bool {
 
 	bitIndex := byte(1 << (index % 8))
 
-	if bitAlreadySet := byteAtOffset&bitIndex == 1; bitAlreadySet {
+	if bitAlreadySet := (byteAtOffset&bitIndex == 1) == value; bitAlreadySet {
 		return false
 	}
-	updatedByte := byteAtOffset | bitIndex
+
+	var updatedByte byte
+	if value {
+		updatedByte = byteAtOffset | bitIndex
+	} else {
+		updatedByte = byteAtOffset & ^bitIndex
+	}
 
 	return b.SetByte(byteIndex, updatedByte)
 }
