@@ -37,20 +37,20 @@ func (b Bitfield) IsEmpty() bool {
 // SetBit sets the bit at a particular index within the bitfield
 // Returns true if a change was inacted
 func (b *Bitfield) SetBit(index int, value bool) bool {
-	byteIndex := uint64(index / 8) // 8 bits in a byte
+	byteIndex := uint64(index / 8)
 	byteAtOffset := b.GetByte(byteIndex)
 
 	bitIndex := byte(1 << (index % 8))
-
-	if bitAlreadySet := (byteAtOffset&bitIndex == 1) == value; bitAlreadySet {
-		return false
-	}
 
 	var updatedByte byte
 	if value {
 		updatedByte = byteAtOffset | bitIndex
 	} else {
 		updatedByte = byteAtOffset & ^bitIndex
+	}
+
+	if updatedByte == byteAtOffset {
+		return false
 	}
 
 	return b.SetByte(byteIndex, updatedByte)
