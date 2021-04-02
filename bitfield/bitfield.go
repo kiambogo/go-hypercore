@@ -59,20 +59,20 @@ func (b *Bitfield) SetBit(index int, value bool) bool {
 // SetByte sets the byte at a particular index within the bitfield
 // Returns true if a change was inacted
 func (b *Bitfield) SetByte(index uint64, value byte) bool {
-	pageIndex := index / uint64(b.pager.PageSize())
-	offset := index % uint64(b.pager.PageSize())
+	pageIndex, bufferOffset := b.calculatePageIndexAndBufferOffset(index)
 	page := b.pager.GetOrAlloc(int(pageIndex))
-	pageBuffer := page.Buffer()
+	pageBuffer := *page.Buffer()
 
 	// Update the byte length of the bitfield
 	if index >= b.byteLength {
 		b.byteLength = index + 1
 	}
 
-	if (*pageBuffer)[offset] == value {
+	if pageBuffer[bufferOffset] == value {
 		return false
 	}
-	(*pageBuffer)[offset] = value
+
+	pageBuffer[bufferOffset] = value
 	return true
 }
 
@@ -86,16 +86,19 @@ func (b *Bitfield) GetBit(index uint64) bool {
 
 // GetByte returns the value of the byte at a provided index
 func (b *Bitfield) GetByte(index uint64) byte {
-	byteOffset := b.pageMask(index)
-	pageIndex := index / uint64(b.pager.PageSize())
+	pageIndex, bufferOffset := b.calculatePageIndexAndBufferOffset(index)
 	page := b.pager.Get(int(pageIndex))
+
 	if page == nil {
 		return byte(0)
 	}
-	pageBuffer := page.Buffer()
-	return (*pageBuffer)[byteOffset]
+	pageBuffer := *page.Buffer()
+	return pageBuffer[bufferOffset]
 }
 
-func (b Bitfield) pageMask(index uint64) uint64 {
-	return index & (uint64(b.pager.PageSize()) - 1)
+func (b Bitfield) calculatePageIndexAndBufferOffset(index uint64) (uint64, uint64) {
+	pageIndex := index / uint64(b.pager.PageSize())
+	bufferOffset := index % uint64(b.pager.PageSize())
+
+	return pageIndex, bufferOffset
 }
