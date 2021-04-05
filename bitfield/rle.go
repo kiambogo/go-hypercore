@@ -4,34 +4,36 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"log"
 )
 
 func Encode(data []byte) ([]byte, bool) {
+	dataLength := len(data)
 	encodedData := []byte{}
 
-	if len(data) == 0 {
+	if dataLength <= 1 {
 		return data, false
 	}
 
 	currentRunByte := data[0]
-	var currentRunLength int64 = 1
-	for _, b := range data {
+	var currentRunLength int64 = 0
+	for i, b := range data {
 		if b == currentRunByte {
 			currentRunLength++
-			continue
+			if dataLength-i > 1 {
+				continue
+			}
 		}
 
 		crlBuf := make([]byte, binary.MaxVarintLen64)
 		bytesWritten := binary.PutVarint(crlBuf, currentRunLength)
+		crlBuf = crlBuf[:bytesWritten]
 		crlBuf = append(crlBuf, currentRunByte)
-		encodedData = append(encodedData, crlBuf[:bytesWritten]...)
+		encodedData = append(encodedData, crlBuf...)
 		currentRunByte = b
 		currentRunLength = 1
 	}
 
 	if len(encodedData) >= len(data) {
-		log.Printf("encoded: %d is gt than orig: %d", len(encodedData), len(data))
 		return data, false
 	}
 
@@ -39,31 +41,25 @@ func Encode(data []byte) ([]byte, bool) {
 }
 
 func Decode(encoded []byte) ([]byte, error) {
-	log.Println(encoded)
 	if len(encoded) == 0 {
 		return []byte{}, nil
 	}
 
 	decoded := bytes.NewBuffer([]byte{})
 	bufReader := bytes.NewReader(encoded)
-	log.Printf("buf has %d unread bytes", bufReader.Len())
 
 	for bufReader.Len() > 0 {
 		count, err := binary.ReadVarint(bufReader)
 		if err != nil {
 			return nil, err
 		}
-		log.Printf("read varint value: %d", count)
-		log.Printf("buf has %d unread bytes", bufReader.Len())
 		charByte, err := bufReader.ReadByte()
 		if err != nil {
 			return nil, err
 		}
 
 		s := fmt.Sprintf("%d%s", count, string(charByte))
-		log.Println(s)
-		_, err = decoded.WriteString(s)
-		if err != nil {
+		if _, err = decoded.WriteString(s); err != nil {
 			return nil, err
 		}
 	}
