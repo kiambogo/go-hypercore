@@ -29,6 +29,7 @@ func Test_Varint(t *testing.T) {
 		assert.Equal(t, count, tc)
 	}
 }
+
 func Test_Encode(t *testing.T) {
 	t.Parallel()
 	testCases := []struct {
@@ -76,14 +77,19 @@ func Test_Encode(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		encodedData, encoded := Encode(tc.input)
-		assert.Equal(t, tc.shouldEncode, encoded, tc.name)
-		assert.Equal(t, tc.expectedEncoded, encodedData, tc.name)
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			encodedData, encoded := Encode(tc.input)
+			assert.Equal(t, tc.shouldEncode, encoded, tc.name)
+			assert.Equal(t, tc.expectedEncoded, encodedData, tc.name)
+		})
 	}
 }
 
 func Test_Decode(t *testing.T) {
 	t.Parallel()
+
 	testCases := []struct {
 		name            string
 		encoded         []byte
@@ -129,14 +135,21 @@ func Test_Decode(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		decoded, err := Decode(tc.encoded)
-		if tc.expectedErr != nil {
-			assert.Error(t, err, tc.name)
-			assert.Equal(t, err, tc.expectedErr)
-		} else {
-			assert.NoError(t, err, tc.name)
-			assert.Equal(t, string(tc.expectedDecoded), string(decoded), tc.name)
-		}
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			decoded, err := Decode(tc.encoded)
+			if tc.expectedErr != nil {
+				assert.Error(t, err, tc.name)
+				assert.Equal(t, err, tc.expectedErr)
+			} else {
+				assert.NoError(t, err, tc.name)
+				assert.Equal(t, string(tc.expectedDecoded), string(decoded), tc.name)
+			}
+		})
+	}
+}
+
 func Test_EncodeAndDecode(t *testing.T) {
 	t.Parallel()
 
