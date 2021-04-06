@@ -16,18 +16,33 @@ func Encode(data []byte) ([]byte, bool) {
 	currentRunByte := data[0]
 	var currentRunLength int64 = 0
 	for i, b := range data {
-		if b == currentRunByte {
+		byteMatch := b == currentRunByte
+		atLastByte := i == dataLength-1
+
+		// continued byte match, but end of the encoded data
+		if byteMatch && atLastByte {
 			currentRunLength++
-			if dataLength-i > 1 {
-				continue
-			}
+			encodedData = appendByteCount(encodedData, currentRunLength, currentRunByte)
+			break
 		}
 
-		crlBuf := make([]byte, binary.MaxVarintLen64)
-		bytesWritten := binary.PutVarint(crlBuf, currentRunLength)
-		crlBuf = crlBuf[:bytesWritten]
-		crlBuf = append(crlBuf, currentRunByte)
-		encodedData = append(encodedData, crlBuf...)
+		// continued byte match, still more encoded data to iterate through
+		if byteMatch {
+			currentRunLength++
+			continue
+		}
+
+		// end of the encoded data where the last byte is different than the previous byte
+		if atLastByte {
+			encodedData = appendByteCount(encodedData, currentRunLength, currentRunByte)
+			currentRunByte = b
+			currentRunLength = 1
+			encodedData = appendByteCount(encodedData, currentRunLength, currentRunByte)
+			break
+		}
+
+		// different byte found with more encoded data to process
+		encodedData = appendByteCount(encodedData, currentRunLength, currentRunByte)
 		currentRunByte = b
 		currentRunLength = 1
 	}
@@ -65,4 +80,14 @@ func Decode(encoded []byte) ([]byte, error) {
 	}
 
 	return decoded.Bytes(), nil
+}
+
+func appendByteCount(slice []byte, count int64, elem byte) []byte {
+	crlBuf := make([]byte, binary.MaxVarintLen64)
+	bytesWritten := binary.PutVarint(crlBuf, count)
+	crlBuf = crlBuf[:bytesWritten]
+	crlBuf = append(crlBuf, elem)
+	slice = append(slice, crlBuf...)
+
+	return slice
 }
