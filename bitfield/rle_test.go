@@ -71,7 +71,7 @@ func Test_Encode(t *testing.T) {
 			name:            "encoded, 3",
 			input:           []byte("AAABBBCCCCDDDDEFFFFFFFFGGH"),
 			shouldEncode:    true,
-			expectedEncoded: []byte{0x6, 0x41, 0x6, 0x42, 0x8, 0x43, 0x8, 0x44, 0x2, 0x45, 0x10, 0x46, 0x4, 0x47},
+			expectedEncoded: []byte{0x6, 0x41, 0x6, 0x42, 0x8, 0x43, 0x8, 0x44, 0x2, 0x45, 0x10, 0x46, 0x4, 0x47, 0x2, 0x48},
 		},
 	}
 
@@ -137,5 +137,50 @@ func Test_Decode(t *testing.T) {
 			assert.NoError(t, err, tc.name)
 			assert.Equal(t, string(tc.expectedDecoded), string(decoded), tc.name)
 		}
+func Test_EncodeAndDecode(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name        string
+		input       []byte
+		expectedErr error
+	}{
+		{
+			name:        "empty input",
+			input:       []byte{},
+			expectedErr: nil,
+		},
+		{
+			name:        "valid, 1",
+			input:       []byte("aaaaaa"),
+			expectedErr: nil,
+		},
+		{
+			name:        "valid, 2",
+			input:       []byte("aaabcccccccccddd"),
+			expectedErr: nil,
+		},
+		{
+			name:        "valid, 3",
+			input:       []byte("aaabcccccccccdddeeeeeeeeeefghi"),
+			expectedErr: nil,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			encoded, _ := Encode(tc.input)
+
+			decoded, err := Decode(encoded)
+			if tc.expectedErr != nil {
+				assert.Error(t, err, tc.name)
+				assert.Equal(t, err, tc.expectedErr)
+			} else {
+				assert.NoError(t, err, tc.name)
+				assert.Equal(t, string(tc.input), string(decoded), tc.name)
+			}
+		})
 	}
 }
