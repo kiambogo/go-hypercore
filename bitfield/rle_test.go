@@ -1,11 +1,34 @@
 package bitfield
 
 import (
+	"bytes"
+	"encoding/binary"
+	"io"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
+func Test_Varint(t *testing.T) {
+	testCases := []int64{
+		0,
+		1,
+		10,
+		100,
+		999999999,
+	}
+
+	for _, tc := range testCases {
+		crlBuf := make([]byte, binary.MaxVarintLen64)
+		bytesWritten := binary.PutVarint(crlBuf, tc)
+		crlBuf = crlBuf[:bytesWritten]
+
+		bufReader := bytes.NewReader(crlBuf)
+		count, err := binary.ReadVarint(bufReader)
+		assert.NoError(t, err, tc)
+		assert.Equal(t, count, tc)
+	}
+}
 func Test_Encode(t *testing.T) {
 	t.Parallel()
 	testCases := []struct {
@@ -73,13 +96,46 @@ func Test_Decode(t *testing.T) {
 			expectedErr:     nil,
 			expectedDecoded: []byte{},
 		},
+		{
+			name:            "decode, 1",
+			encoded:         []byte("\x02\x41"),
+			expectedErr:     nil,
+			expectedDecoded: []byte("A"),
+		},
+		{
+			name:            "decode, 2",
+			encoded:         []byte("\x14\x41"),
+			expectedErr:     nil,
+			expectedDecoded: []byte("AAAAAAAAAA"),
+		},
+		{
+			name:            "decode, 3",
+			encoded:         []byte("\x02\x41\x14\x42"),
+			expectedErr:     nil,
+			expectedDecoded: []byte("ABBBBBBBBBB"),
+		},
+		{
+			name:            "invalid, error 1",
+			encoded:         []byte("\x42"),
+			expectedErr:     io.EOF,
+			expectedDecoded: nil,
+		},
+		{
+			name:            "invalid, error 2",
+			encoded:         []byte("\x02\x41\x42"),
+			expectedErr:     io.EOF,
+			expectedDecoded: nil,
+		},
 	}
 
 	for _, tc := range testCases {
 		decoded, err := Decode(tc.encoded)
 		if tc.expectedErr != nil {
 			assert.Error(t, err, tc.name)
+			assert.Equal(t, err, tc.expectedErr)
+		} else {
+			assert.NoError(t, err, tc.name)
+			assert.Equal(t, string(tc.expectedDecoded), string(decoded), tc.name)
 		}
-		assert.Equal(t, tc.expectedDecoded, decoded, tc.name)
 	}
 }

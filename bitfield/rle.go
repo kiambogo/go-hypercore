@@ -3,7 +3,6 @@ package bitfield
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
 )
 
 func Encode(data []byte) ([]byte, bool) {
@@ -58,9 +57,10 @@ func Decode(encoded []byte) ([]byte, error) {
 			return nil, err
 		}
 
-		s := fmt.Sprintf("%d%s", count, string(charByte))
-		if _, err = decoded.WriteString(s); err != nil {
-			return nil, err
+		for n := int64(0); n < count; n++ {
+			if err := decoded.WriteByte(charByte); err != nil {
+				return nil, err
+			}
 		}
 	}
 
