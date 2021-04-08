@@ -12,7 +12,11 @@ jobs:
       uses: actions/setup-go@v2
       with:
         go-version: ${{ matrix.go-version }}
+    - name: Install Dependencies
+      run: go get honnef.co/go/tools/cmd/staticcheck
     - name: Checkout code
       uses: actions/checkout@v2
+    - name: Static Check
+      run: staticcheck ./...
     - name: Test
       run: go test -race ./...
