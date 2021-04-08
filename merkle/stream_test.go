@@ -71,7 +71,6 @@ func checkNodeCounts(t *testing.T, expectedLeafs, expectedParents int, stream *s
 	}
 	assert.Equal(t, expectedLeafs, leafNodes)
 	assert.Equal(t, expectedParents, parentNodes)
-	return
 }
 
 func Benchmark_Blake2BStream100(b *testing.B) {

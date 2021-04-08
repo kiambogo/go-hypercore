@@ -68,6 +68,7 @@ func Test_Bitfield_SetByte(t *testing.T) {
 	changed = bitField.SetByte(6, 0)
 	assert.False(t, changed)
 	changed = bitField.SetByte(6, 1)
+	assert.True(t, changed)
 	b = bitField.GetByte(6)
 	assert.Equal(t, uint8(1), b&1)
 	assert.Equal(t, uint8(0), b&8)
