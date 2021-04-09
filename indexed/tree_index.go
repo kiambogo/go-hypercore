@@ -2,7 +2,7 @@ package indexed
 
 import (
 	"github.com/kiambogo/go-hypercore/bitfield"
-	. "github.com/kiambogo/go-hypercore/flattree"
+	ft "github.com/kiambogo/go-hypercore/flattree"
 )
 
 type tree struct {
@@ -26,8 +26,8 @@ func (t tree) Set(index uint64) bool {
 	}
 
 	// iteratively update the tree, setting the parent of index to true if the sibling is also set
-	for t.bitfield.GetBit(Sibling(index)) {
-		index = Parent(index)
+	for t.bitfield.GetBit(ft.Sibling(index)) {
+		index = ft.Parent(index)
 		if !t.bitfield.SetBit(int(index), true) {
 			break
 		}
