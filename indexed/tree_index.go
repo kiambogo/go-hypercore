@@ -6,10 +6,10 @@ import (
 )
 
 type tree struct {
-	bitfield bitfield.Bitfield
+	bitfield *bitfield.Bitfield
 }
 
-func NewTree(bitfield bitfield.Bitfield) tree {
+func NewTree(bitfield *bitfield.Bitfield) tree {
 	return tree{
 		bitfield: bitfield,
 	}
@@ -19,7 +19,7 @@ func (t tree) Get(index uint64) bool {
 	return t.bitfield.GetBit(index)
 }
 
-func (t tree) Set(index uint64) bool {
+func (t *tree) Set(index uint64) bool {
 	// update the element in the tree at index
 	if !t.bitfield.SetBit(int(index), true) {
 		return false
@@ -36,8 +36,45 @@ func (t tree) Set(index uint64) bool {
 	return true
 }
 
-func (t tree) Proof() {
+func (t tree) Proof(index uint64) {
 }
 
-func (t tree) Digest() {
+// Digest will calculate the digest of the data at a particular index
+// It does this by checking the uncles in the merkle tree
+func (t tree) Digest(index uint64) (digest uint64) {
+  if t.Get(index) {
+    return 1
+  }
+
+  bit := 2
+  next := ft.Sibling(index)
+  max := max(next+2, t.bitfield.Len())
+  parent := ft.Parent(next)
+
+  for (ft.RightSpan(next) < max) || (ft.LeftSpan(parent) > 0) {
+    if t.Get(next) {
+      digest |= uint64(bit)
+    }
+    if t.Get(parent) {
+      digest |= uint64(2*bit+1)
+      if (digest&1) != 1 {
+        digest += uint64(1)
+      }
+      if (digest+uint64(1) == uint64(4*bit)) {
+        return 1
+      }
+    }
+    next = ft.Sibling(parent)
+    parent = ft.Parent(next)
+    bit *= 2
+  }
+
+  return
+}
+
+func max(x,y uint64) uint64 {
+  if x >= y {
+    return x
+  }
+  return y
 }
