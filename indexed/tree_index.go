@@ -46,27 +46,30 @@ func (t tree) Digest(index uint64) (digest uint64) {
     return 1
   }
 
-  bit := 2
-  next := ft.Sibling(index)
-  max := max(next+2, t.bitfield.Len())
-  parent := ft.Parent(next)
+  depthBit := 2
+  nextIndex := ft.Sibling(index)
+  parentIndex := ft.Parent(index)
+  maxTreeIndex := max(nextIndex+2, t.bitfield.Len())
 
-  for (ft.RightSpan(next) < max) || (ft.LeftSpan(parent) > 0) {
-    if t.Get(next) {
-      digest |= uint64(bit)
+  rightNodesLeftToConsider := func (next uint64) bool { return ft.RightSpan(next) < maxTreeIndex }
+  leftNodesLeftToConsider := func(parent uint64) bool { return ft.LeftSpan(parent) > 0 }
+
+  for (rightNodesLeftToConsider(nextIndex)) || (leftNodesLeftToConsider(parentIndex)) {
+    if t.Get(nextIndex) {
+      digest |= uint64(depthBit)
     }
-    if t.Get(parent) {
-      digest |= uint64(2*bit+1)
+    if t.Get(parentIndex) {
+      digest |= uint64(2*depthBit+1)
       if (digest&1) != 1 {
         digest += uint64(1)
       }
-      if (digest+uint64(1) == uint64(4*bit)) {
+      if (digest+uint64(1) == uint64(4*depthBit)) {
         return 1
       }
     }
-    next = ft.Sibling(parent)
-    parent = ft.Parent(next)
-    bit *= 2
+    nextIndex = ft.Sibling(parentIndex)
+    parentIndex = ft.Parent(nextIndex)
+    depthBit *= 2
   }
 
   return
