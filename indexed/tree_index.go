@@ -42,42 +42,42 @@ func (t tree) Proof(index uint64) {
 // Digest will calculate the digest of the data at a particular index
 // It does this by checking the uncles in the merkle tree
 func (t tree) Digest(index uint64) (digest uint64) {
-  if t.Get(index) {
-    return 1
-  }
+	if t.Get(index) {
+		return 1
+	}
 
-  depthBit := 2
-  nextIndex := ft.Sibling(index)
-  parentIndex := ft.Parent(index)
-  maxTreeIndex := max(nextIndex+2, t.bitfield.Len())
+	depthBit := 2
+	nextIndex := ft.Sibling(index)
+	parentIndex := ft.Parent(index)
+	maxTreeIndex := max(nextIndex+2, t.bitfield.Len())
 
-  rightNodesLeftToConsider := func (next uint64) bool { return ft.RightSpan(next) < maxTreeIndex }
-  leftNodesLeftToConsider := func(parent uint64) bool { return ft.LeftSpan(parent) > 0 }
+	rightNodesLeftToConsider := func(next uint64) bool { return ft.RightSpan(next) < maxTreeIndex }
+	leftNodesLeftToConsider := func(parent uint64) bool { return ft.LeftSpan(parent) > 0 }
 
-  for (rightNodesLeftToConsider(nextIndex)) || (leftNodesLeftToConsider(parentIndex)) {
-    if t.Get(nextIndex) {
-      digest |= uint64(depthBit)
-    }
-    if t.Get(parentIndex) {
-      digest |= uint64(2*depthBit+1)
-      if (digest&1) != 1 {
-        digest += uint64(1)
-      }
-      if (digest+uint64(1) == uint64(4*depthBit)) {
-        return 1
-      }
-    }
-    nextIndex = ft.Sibling(parentIndex)
-    parentIndex = ft.Parent(nextIndex)
-    depthBit *= 2
-  }
+	for (rightNodesLeftToConsider(nextIndex)) || (leftNodesLeftToConsider(parentIndex)) {
+		if t.Get(nextIndex) {
+			digest |= uint64(depthBit)
+		}
+		if t.Get(parentIndex) {
+			digest |= uint64(2*depthBit + 1)
+			if (digest & 1) != 1 {
+				digest += uint64(1)
+			}
+			if digest+uint64(1) == uint64(4*depthBit) {
+				return 1
+			}
+		}
+		nextIndex = ft.Sibling(parentIndex)
+		parentIndex = ft.Parent(nextIndex)
+		depthBit *= 2
+	}
 
-  return
+	return
 }
 
-func max(x,y uint64) uint64 {
-  if x >= y {
-    return x
-  }
-  return y
+func max(x, y uint64) uint64 {
+	if x >= y {
+		return x
+	}
+	return y
 }
