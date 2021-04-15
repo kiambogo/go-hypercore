@@ -5,6 +5,11 @@ import (
 	ft "github.com/kiambogo/go-hypercore/flattree"
 )
 
+type Verification struct {
+	node uint64
+	top  uint64
+}
+
 type tree struct {
 	bitfield *bitfield.Bitfield
 }
@@ -102,7 +107,7 @@ func (t tree) Proof(index, digest uint64) (proof Proof, verified bool, err error
 		sibling = ft.Sibling(next)
 		if !t.Get(sibling) {
 			verifiedBy := t.VerifiedBy(next)
-			roots, err = ft.FullRoots(verifiedBy)
+			roots, err = ft.FullRoots(verifiedBy.node)
 			if err != nil {
 				return
 			}
@@ -113,7 +118,7 @@ func (t tree) Proof(index, digest uint64) (proof Proof, verified bool, err error
 			}
 			return Proof{
 				index:      index,
-				verifiedBy: verifiedBy,
+				verifiedBy: verifiedBy.node,
 				nodes:      nodes,
 			}, false, err
 		} else if !t.Get(sibling) {
@@ -163,6 +168,37 @@ func (t tree) Digest(index uint64) (digest uint64) {
 	}
 
 	return
+}
+
+func (t tree) VerifiedBy(index uint64) (verification Verification) {
+	if !t.Get(index) {
+		return
+	}
+	depth := ft.Depth(index)
+	top := index
+	parent := ft.Parent(index)
+	depth += 1
+	for t.Get(parent) && t.Get(ft.Sibling(top)) {
+		top = parent
+		parent = ft.Parent(top)
+		depth += 1
+	}
+
+	depth -= 1
+
+	for depth != 0 {
+		top, _ = ft.LeftChild(ft.Index(depth, ft.Offset(top)+1))
+		depth -= 1
+		for t.Get(top) && depth > 0 {
+			top, _ = ft.LeftChild(top)
+			depth -= 1
+		}
+	}
+	if t.Get(top) {
+		return Verification{node: top + 2, top: top}
+	}
+
+	return Verification{node: top, top: top}
 }
 
 func max(x, y uint64) uint64 {
