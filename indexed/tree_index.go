@@ -36,7 +36,97 @@ func (t *tree) Set(index uint64) bool {
 	return true
 }
 
-func (t tree) Proof(index uint64) {
+func (t tree) Proof(index, digest uint64) (proof Proof, verified bool, err error) {
+	// if the node isnt set for the index provided, return no proof
+	// always return the hash of the node, even if digest isn't provided???
+	// digest & 1 == has_root ??
+	// IF digest == 1 and has root, then set remote tree with next (starting at index)
+	// then next node will be the sibling to index
+	// get all the roots from the right span of next, add to remote tree
+	// ELSE
+	// go to sibling. if digest is odd and sibling is set, then add sibling to remote tree
+	// go to parent and repeat
+	// digest = digest/2
+	var roots []uint64
+
+	if !t.Get(index) {
+		return proof, false, nil
+	}
+
+	nodes := []uint64{index}
+
+	if digest == 1 {
+		return Proof{
+			index:      index,
+			verifiedBy: 0,
+			nodes:      nodes,
+		}, true, nil
+	}
+
+	next := index
+	hasRoot := digest & 1
+	digest >>= 2
+
+	for digest > 0 {
+		if digest == 1 && hasRoot != 0 {
+			if t.Get(next) {
+				_ = t.Set(next)
+			}
+
+			nextSibling := ft.Sibling(next)
+			if nextSibling < next {
+				next = nextSibling
+			}
+
+			roots, err = ft.FullRoots(ft.RightSpan(next) + 2)
+			if err != nil {
+				return
+			}
+			for _, root := range roots {
+				if t.Get(root) {
+					_ = t.Set(root)
+				}
+			}
+			break
+		}
+	}
+
+	sibling := ft.Sibling(next)
+	if !isEven(digest) && t.Get(sibling) {
+		t.Set(sibling)
+	}
+	next = ft.Parent(next)
+	digest >>= 2
+
+	for !t.Get(next) {
+		sibling = ft.Sibling(next)
+		if !t.Get(sibling) {
+			verifiedBy := t.VerifiedBy(next)
+			roots, err = ft.FullRoots(verifiedBy)
+			if err != nil {
+				return
+			}
+			for _, root := range roots {
+				if root != next && !t.Get(root) {
+					nodes = append(nodes, root)
+				}
+			}
+			return Proof{
+				index:      index,
+				verifiedBy: verifiedBy,
+				nodes:      nodes,
+			}, false, err
+		} else if !t.Get(sibling) {
+			nodes = append(nodes, sibling)
+		}
+		next = ft.Parent(next)
+	}
+
+	return Proof{
+		index:      index,
+		verifiedBy: 0,
+		nodes:      nodes,
+	}, false, nil
 }
 
 // Digest will calculate the digest of the data at a particular index
@@ -80,4 +170,8 @@ func max(x, y uint64) uint64 {
 		return x
 	}
 	return y
+}
+
+func isEven(n uint64) bool {
+	return n%2 == 0
 }
