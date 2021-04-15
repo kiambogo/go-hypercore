@@ -1,13 +1,14 @@
 package indexed
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/kiambogo/go-hypercore/bitfield"
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_treeDigest(t *testing.T) {
+func Test_Digest(t *testing.T) {
 	testCases := []struct {
 		name           string
 		index          uint64
@@ -86,4 +87,30 @@ func Test_treeDigest(t *testing.T) {
 		})
 	}
 
+}
+
+func Test_VerifiedBy(t *testing.T) {
+	t.Parallel()
+
+	bf := bitfield.NewBitfield(0)
+	tree := NewTree(bf)
+
+	verify := func(index, node, top uint64) {
+		verification := tree.VerifiedBy(index)
+		assert.Equal(t, Verification{node: node, top: top}, verification, fmt.Sprintf("Index: %d, Node %d, Top %d", index, node, top))
+	}
+
+	verify(0, 0, 0)
+
+	tree.Set(0)
+	verify(0, 2, 0)
+
+	tree.Set(2)
+	verify(0, 4, 4)
+
+	tree.Set(5)
+	verify(0, 8, 8)
+
+	tree.Set(8)
+	verify(0, 10, 8)
 }
