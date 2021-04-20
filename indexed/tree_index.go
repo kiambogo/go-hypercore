@@ -20,6 +20,12 @@ func NewTree(bitfield *bitfield.Bitfield) tree {
 	}
 }
 
+func NewDefaultTree() tree {
+	return tree{
+		bitfield: bitfield.NewBitfield(0),
+	}
+}
+
 func (t tree) Get(index uint64) bool {
 	return t.bitfield.GetBit(index)
 }
@@ -41,7 +47,7 @@ func (t *tree) Set(index uint64) bool {
 	return true
 }
 
-func (t tree) Proof(index, digest uint64) (proof Proof, verified bool, err error) {
+func (t tree) Proof(index, digest uint64, remoteTree tree) (proof Proof, verified bool, err error) {
 	// if the node isnt set for the index provided, return no proof
 	// always return the hash of the node, even if digest isn't provided???
 	// digest & 1 == has_root ??
@@ -70,12 +76,13 @@ func (t tree) Proof(index, digest uint64) (proof Proof, verified bool, err error
 
 	next := index
 	hasRoot := digest & 1
-	digest >>= 2
+	sibling := uint64(0)
+	digest >>= 1
 
 	for digest > 0 {
 		if digest == 1 && hasRoot != 0 {
 			if t.Get(next) {
-				_ = t.Set(next)
+				_ = remoteTree.Set(next)
 			}
 
 			nextSibling := ft.Sibling(next)
@@ -89,21 +96,20 @@ func (t tree) Proof(index, digest uint64) (proof Proof, verified bool, err error
 			}
 			for _, root := range roots {
 				if t.Get(root) {
-					_ = t.Set(root)
+					_ = remoteTree.Set(root)
 				}
 			}
 			break
 		}
+		sibling := ft.Sibling(next)
+		if !isEven(digest) && t.Get(sibling) {
+			remoteTree.Set(sibling)
+		}
+		next = ft.Parent(next)
+		digest >>= 1
 	}
 
-	sibling := ft.Sibling(next)
-	if !isEven(digest) && t.Get(sibling) {
-		t.Set(sibling)
-	}
-	next = ft.Parent(next)
-	digest >>= 2
-
-	for !t.Get(next) {
+	for !remoteTree.Get(next) {
 		sibling = ft.Sibling(next)
 		if !t.Get(sibling) {
 			verifiedBy := t.VerifiedBy(next)
@@ -112,7 +118,7 @@ func (t tree) Proof(index, digest uint64) (proof Proof, verified bool, err error
 				return
 			}
 			for _, root := range roots {
-				if root != next && !t.Get(root) {
+				if root != next && !remoteTree.Get(root) {
 					nodes = append(nodes, root)
 				}
 			}
@@ -121,7 +127,7 @@ func (t tree) Proof(index, digest uint64) (proof Proof, verified bool, err error
 				verifiedBy: verifiedBy.node,
 				nodes:      nodes,
 			}, false, err
-		} else if !t.Get(sibling) {
+		} else if !remoteTree.Get(sibling) {
 			nodes = append(nodes, sibling)
 		}
 		next = ft.Parent(next)
