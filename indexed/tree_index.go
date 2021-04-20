@@ -116,7 +116,7 @@ func (t tree) Proof(index, digest uint64, remoteTree tree) (proof Proof, verifie
 				index:      index,
 				verifiedBy: verifiedBy.node,
 				nodes:      nodes,
-			}, false, err
+			}, true, err
 		} else if !remoteTree.Get(sibling) {
 			nodes = append(nodes, sibling)
 		}
@@ -127,7 +127,7 @@ func (t tree) Proof(index, digest uint64, remoteTree tree) (proof Proof, verifie
 		index:      index,
 		verifiedBy: 0,
 		nodes:      nodes,
-	}, false, nil
+	}, true, nil
 }
 
 // Digest will calculate the digest of the data at a particular index
