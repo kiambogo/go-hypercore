@@ -258,3 +258,44 @@ func Test_ProofWithoutDigest3(t *testing.T) {
 	assert.Equal(t, Proof{index: 17, verifiedBy: 30, nodes: []uint64{17, 21, 7, 25, 28}}, proof)
 	assert.True(t, verified)
 }
+
+func Test_ProofWithDigest1(t *testing.T) {
+	t.Parallel()
+
+	tree := NewDefaultTree()
+	proof, verified, err := tree.Proof(0, 0, NewDefaultTree())
+	assert.NoError(t, err)
+	assert.False(t, verified)
+
+	tree.Set(0)
+	tree.Set(2)
+
+	proof, verified, err = tree.Proof(0, 0b1, NewDefaultTree())
+	assert.NoError(t, err)
+	assert.Equal(t, Proof{index: 0, verifiedBy: 0, nodes: []uint64{0}}, proof)
+	assert.True(t, verified)
+
+	tree.Set(5)
+
+	proof, verified, err = tree.Proof(0, 0b10, NewDefaultTree())
+	assert.NoError(t, err)
+	assert.Equal(t, Proof{index: 0, verifiedBy: 8, nodes: []uint64{0, 5}}, proof)
+	assert.True(t, verified)
+
+	proof, verified, err = tree.Proof(0, 0b110, NewDefaultTree())
+	assert.NoError(t, err)
+	assert.Equal(t, Proof{index: 0, verifiedBy: 8, nodes: []uint64{0}}, proof)
+	assert.True(t, verified)
+
+	tree.Set(8)
+
+	proof, verified, err = tree.Proof(0, 0b101, NewDefaultTree())
+	assert.NoError(t, err)
+	assert.Equal(t, Proof{index: 0, verifiedBy: 0, nodes: []uint64{0, 2}}, proof)
+	assert.True(t, verified)
+
+	proof, verified, err = tree.Proof(0, 0b10, NewDefaultTree())
+	assert.NoError(t, err)
+	assert.Equal(t, Proof{index: 0, verifiedBy: 10, nodes: []uint64{0, 5, 8}}, proof)
+	assert.True(t, verified)
+}
