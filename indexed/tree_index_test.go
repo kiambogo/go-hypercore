@@ -1,13 +1,14 @@
 package indexed
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/kiambogo/go-hypercore/bitfield"
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_treeDigest(t *testing.T) {
+func Test_Digest(t *testing.T) {
 	testCases := []struct {
 		name           string
 		index          uint64
@@ -77,8 +78,7 @@ func Test_treeDigest(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			bf := bitfield.NewBitfield(0)
-			tree := NewTree(bf)
+			tree := NewDefaultTree()
 			tc.ops(tree)
 			digest := tree.Digest(tc.index)
 
@@ -86,4 +86,126 @@ func Test_treeDigest(t *testing.T) {
 		})
 	}
 
+}
+
+func Test_VerifiedBy(t *testing.T) {
+	t.Parallel()
+
+	bf := bitfield.NewBitfield(0)
+	tree := NewTree(bf)
+
+	verify := func(index, node, top uint64) {
+		verification := tree.VerifiedBy(index)
+		assert.Equal(t, Verification{node: node, top: top}, verification, fmt.Sprintf("Index: %d, Node %d, Top %d", index, node, top))
+	}
+
+	verify(0, 0, 0)
+
+	tree.Set(0)
+	verify(0, 2, 0)
+
+	tree.Set(2)
+	verify(0, 4, 4)
+
+	tree.Set(5)
+	verify(0, 8, 8)
+
+	tree.Set(8)
+	verify(0, 10, 8)
+
+	bf = bitfield.NewBitfield(0)
+	tree = NewTree(bf)
+	tree.Set(10)
+	tree.Set(8)
+	tree.Set(13)
+	tree.Set(3)
+	tree.Set(17)
+	verify(10, 20, 20)
+
+	bf = bitfield.NewBitfield(0)
+	tree = NewTree(bf)
+	tree.Set(7)
+	tree.Set(16)
+	tree.Set(18)
+	tree.Set(21)
+	tree.Set(25)
+	tree.Set(28)
+	verify(16, 30, 28)
+	verify(18, 30, 28)
+	verify(17, 30, 28)
+}
+
+func Test_ProofWithoutDigest1(t *testing.T) {
+	t.Parallel()
+
+	tree := NewDefaultTree()
+	proof, verifiedBy, err := tree.Proof(0, 0, NewDefaultTree())
+	assert.NoError(t, err)
+	assert.Equal(t, Proof{index: 0, verifiedBy: 0, nodes: nil}, proof)
+	assert.False(t, verifiedBy)
+
+	tree.Set(0)
+	proof, verifiedBy, err = tree.Proof(0, 0, NewDefaultTree())
+	assert.NoError(t, err)
+	assert.Equal(t, Proof{index: 0, verifiedBy: 2, nodes: []uint64{0}}, proof)
+	assert.False(t, verifiedBy)
+
+	tree.Set(2)
+	proof, verifiedBy, err = tree.Proof(0, 0, NewDefaultTree())
+	assert.NoError(t, err)
+	assert.Equal(t, Proof{index: 0, verifiedBy: 4, nodes: []uint64{0, 2}}, proof)
+	assert.False(t, verifiedBy)
+
+	tree.Set(5)
+	proof, verifiedBy, err = tree.Proof(0, 0, NewDefaultTree())
+	assert.NoError(t, err)
+	assert.Equal(t, Proof{index: 0, verifiedBy: 8, nodes: []uint64{0, 2, 5}}, proof)
+	assert.False(t, verifiedBy)
+
+	tree.Set(8)
+	proof, verifiedBy, err = tree.Proof(0, 0, NewDefaultTree())
+	assert.NoError(t, err)
+	assert.Equal(t, Proof{index: 0, verifiedBy: 10, nodes: []uint64{0, 2, 5, 8}}, proof)
+	assert.False(t, verifiedBy)
+}
+
+func Test_ProofWithoutDigest2(t *testing.T) {
+	t.Parallel()
+
+	tree := NewDefaultTree()
+	tree.Set(10)
+	tree.Set(8)
+	tree.Set(13)
+	tree.Set(3)
+	tree.Set(17)
+	proof, verifiedBy, err := tree.Proof(10, 0, NewDefaultTree())
+	assert.NoError(t, err)
+	assert.Equal(t, Proof{index: 10, verifiedBy: 20, nodes: []uint64{10, 8, 13, 3, 17}}, proof)
+	assert.False(t, verifiedBy)
+}
+
+func Test_ProofWithoutDigest3(t *testing.T) {
+	t.Parallel()
+
+	tree := NewDefaultTree()
+	tree.Set(7)
+	tree.Set(16)
+	tree.Set(18)
+	tree.Set(21)
+	tree.Set(25)
+	tree.Set(28)
+	proof, verifiedBy, err := tree.Proof(16, 0, NewDefaultTree())
+	assert.NoError(t, err)
+	assert.Equal(t, Proof{index: 16, verifiedBy: 30, nodes: []uint64{16, 18, 21, 7, 25, 28}}, proof)
+	assert.False(t, verifiedBy)
+
+	proof, verifiedBy, err = tree.Proof(18, 0, NewDefaultTree())
+	assert.NoError(t, err)
+	assert.Equal(t, Proof{index: 18, verifiedBy: 30, nodes: []uint64{18, 16, 21, 7, 25, 28}}, proof)
+	assert.False(t, verifiedBy)
+
+	proof, verifiedBy, err = tree.Proof(17, 0, NewDefaultTree())
+	assert.NoError(t, err)
+	assert.Equal(t, Proof{index: 17, verifiedBy: 30, nodes: []uint64{17, 21, 7, 25, 28}}, proof)
+	assert.False(t, verifiedBy)
 }
