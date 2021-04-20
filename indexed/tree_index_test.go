@@ -209,5 +209,3 @@ func Test_ProofWithoutDigest3(t *testing.T) {
 	assert.Equal(t, Proof{index: 17, verifiedBy: 30, nodes: []uint64{17, 21, 7, 25, 28}}, proof)
 	assert.True(t, verified)
 }
-
-}
