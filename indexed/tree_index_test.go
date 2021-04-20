@@ -113,4 +113,25 @@ func Test_VerifiedBy(t *testing.T) {
 
 	tree.Set(8)
 	verify(0, 10, 8)
+
+	bf = bitfield.NewBitfield(0)
+	tree = NewTree(bf)
+	tree.Set(10)
+	tree.Set(8)
+	tree.Set(13)
+	tree.Set(3)
+	tree.Set(17)
+	verify(10, 20, 20)
+
+	bf = bitfield.NewBitfield(0)
+	tree = NewTree(bf)
+	tree.Set(7)
+	tree.Set(16)
+	tree.Set(18)
+	tree.Set(21)
+	tree.Set(25)
+	tree.Set(28)
+	verify(16, 30, 28)
+	verify(18, 30, 28)
+	verify(17, 30, 28)
 }

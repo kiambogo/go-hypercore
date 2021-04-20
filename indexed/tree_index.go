@@ -189,7 +189,7 @@ func (t tree) VerifiedBy(index uint64) (verification Verification) {
 	for depth != 0 {
 		top, _ = ft.LeftChild(ft.Index(depth, ft.Offset(top)+1))
 		depth -= 1
-		for t.Get(top) && depth > 0 {
+		for !t.Get(top) && depth > 0 {
 			top, _ = ft.LeftChild(top)
 			depth -= 1
 		}
