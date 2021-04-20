@@ -48,16 +48,6 @@ func (t *tree) Set(index uint64) bool {
 }
 
 func (t tree) Proof(index, digest uint64, remoteTree tree) (proof Proof, verified bool, err error) {
-	// if the node isnt set for the index provided, return no proof
-	// always return the hash of the node, even if digest isn't provided???
-	// digest & 1 == has_root ??
-	// IF digest == 1 and has root, then set remote tree with next (starting at index)
-	// then next node will be the sibling to index
-	// get all the roots from the right span of next, add to remote tree
-	// ELSE
-	// go to sibling. if digest is odd and sibling is set, then add sibling to remote tree
-	// go to parent and repeat
-	// digest = digest/2
 	var roots []uint64
 
 	if !t.Get(index) {
