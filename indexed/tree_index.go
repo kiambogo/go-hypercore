@@ -151,9 +151,6 @@ func (t tree) Digest(index uint64) (digest uint64) {
 		}
 		if t.Get(parentIndex) {
 			digest |= uint64(2*depthBit + 1)
-			if (digest & 1) != 1 {
-				digest += uint64(1)
-			}
 			if digest+uint64(1) == uint64(4*depthBit) {
 				return 1
 			}
