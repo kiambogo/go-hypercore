@@ -47,7 +47,7 @@ func (t *tree) Set(index uint64) bool {
 	return true
 }
 
-func (t tree) Proof(index, _digest uint64, remoteTree tree) (proof Proof, verified bool, err error) {
+func (t tree) Proof(index, _digest uint64, _remoteTree tree) (proof Proof, verified bool, err error) {
 	var roots []uint64
 
 	if !t.Get(index) {
@@ -60,7 +60,7 @@ func (t tree) Proof(index, _digest uint64, remoteTree tree) (proof Proof, verifi
 	sibling := uint64(0)
 
 	// Repeat until the remoteTree has the current index set
-	for !remoteTree.Get(currIndex) {
+	for {
 
 		// Update to the sibling of current index
 		sibling = ft.Sibling(currIndex)
@@ -72,29 +72,23 @@ func (t tree) Proof(index, _digest uint64, remoteTree tree) (proof Proof, verifi
 				return
 			}
 			for _, root := range roots {
-				if root != currIndex && !remoteTree.Get(root) {
+				if root != currIndex {
 					nodes = append(nodes, root)
 				}
 			}
+
 			return Proof{
 				index:      index,
 				verifiedBy: verifiedBy.node,
 				nodes:      nodes,
 			}, true, err
-		} else if !remoteTree.Get(sibling) {
-			// Neither tree not remote tree have sibling set
+		} else {
 			nodes = append(nodes, sibling)
 		}
 
 		// Move up the tree
 		currIndex = ft.Parent(currIndex)
 	}
-
-	return Proof{
-		index:      index,
-		verifiedBy: 0,
-		nodes:      nodes,
-	}, true, nil
 }
 
 // Digest will calculate the digest of the data at a particular index
