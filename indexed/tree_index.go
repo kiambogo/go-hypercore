@@ -47,7 +47,7 @@ func (t *tree) Set(index uint64) bool {
 	return true
 }
 
-func (t tree) Proof(index, digest uint64, remoteTree tree) (proof Proof, verified bool, err error) {
+func (t tree) Proof(index, _digest uint64, remoteTree tree) (proof Proof, verified bool, err error) {
 	var roots []uint64
 
 	if !t.Get(index) {
@@ -56,59 +56,23 @@ func (t tree) Proof(index, digest uint64, remoteTree tree) (proof Proof, verifie
 
 	nodes := []uint64{index}
 
-	if digest == 1 {
-		return Proof{
-			index:      index,
-			verifiedBy: 0,
-			nodes:      nodes,
-		}, true, nil
-	}
-
-	next := index
-	hasRoot := digest & 1
+	currIndex := index
 	sibling := uint64(0)
-	digest >>= 1
 
-	for digest > 0 {
-		if digest == 1 && hasRoot != 0 {
-			if t.Get(next) {
-				_ = remoteTree.Set(next)
-			}
+	// Repeat until the remoteTree has the current index set
+	for !remoteTree.Get(currIndex) {
 
-			nextSibling := ft.Sibling(next)
-			if nextSibling < next {
-				next = nextSibling
-			}
+		// Update to the sibling of current index
+		sibling = ft.Sibling(currIndex)
 
-			roots, err = ft.FullRoots(ft.RightSpan(next) + 2)
-			if err != nil {
-				return
-			}
-			for _, root := range roots {
-				if t.Get(root) {
-					_ = remoteTree.Set(root)
-				}
-			}
-			break
-		}
-		sibling := ft.Sibling(next)
-		if !isEven(digest) && t.Get(sibling) {
-			remoteTree.Set(sibling)
-		}
-		next = ft.Parent(next)
-		digest >>= 1
-	}
-
-	for !remoteTree.Get(next) {
-		sibling = ft.Sibling(next)
 		if !t.Get(sibling) {
-			verifiedBy := t.VerifiedBy(next)
+			verifiedBy := t.VerifiedBy(currIndex)
 			roots, err = ft.FullRoots(verifiedBy.node)
 			if err != nil {
 				return
 			}
 			for _, root := range roots {
-				if root != next && !remoteTree.Get(root) {
+				if root != currIndex && !remoteTree.Get(root) {
 					nodes = append(nodes, root)
 				}
 			}
@@ -118,9 +82,12 @@ func (t tree) Proof(index, digest uint64, remoteTree tree) (proof Proof, verifie
 				nodes:      nodes,
 			}, true, err
 		} else if !remoteTree.Get(sibling) {
+			// Neither tree not remote tree have sibling set
 			nodes = append(nodes, sibling)
 		}
-		next = ft.Parent(next)
+
+		// Move up the tree
+		currIndex = ft.Parent(currIndex)
 	}
 
 	return Proof{
