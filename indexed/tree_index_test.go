@@ -8,6 +8,55 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// Small tree example
+//       3
+//   1       5
+// 0   2   4   6
+
+func Test_GetAndSet(t *testing.T) {
+	t.Parallel()
+
+	t.Run("get an unset index returns false", func(t *testing.T) {
+		t.Parallel()
+		tree := NewDefaultTree()
+		assert.False(t, tree.Get(0))
+	})
+
+	t.Run("set an already set index returns false", func(t *testing.T) {
+		t.Parallel()
+		tree := NewDefaultTree()
+		assert.True(t, tree.Set(0))
+		assert.False(t, tree.Set(0))
+	})
+
+	t.Run("set iteratively updates the parent if sibling is also set", func(t *testing.T) {
+		t.Parallel()
+		tree := NewDefaultTree()
+
+		assert.False(t, tree.Get(1))
+
+		tree.Set(0)
+		assert.False(t, tree.Get(1))
+
+		tree.Set(2)
+		assert.True(t, tree.Get(1))
+
+		tree.Set(4)
+		tree.Set(6)
+		assert.True(t, tree.Get(5))
+		assert.True(t, tree.Get(3))
+	})
+
+	t.Run("set when sibling and parent are already set", func(t *testing.T) {
+		t.Parallel()
+		tree := NewDefaultTree()
+		tree.Set(2)
+		tree.Set(1)
+
+		assert.True(t, tree.Set(0))
+	})
+}
+
 func Test_Digest(t *testing.T) {
 	testCases := []struct {
 		name           string
