@@ -56,16 +56,18 @@ func (t tree) Proof(index, _digest uint64, _remoteTree tree) (proof Proof, verif
 
 	nodes := []uint64{index}
 
-	currIndex := index
-	sibling := uint64(0)
+	// Repeat going up the tree until we don't have the sibling set
+	for currIndex, sibling := index, uint64(0); ; currIndex = ft.Parent(currIndex) {
+		sibling = ft.Sibling(currIndex) // Update to the sibling of current index
 
-	// Repeat until the remoteTree has the current index set
-	for {
+		if t.Get(sibling) {
+			nodes = append(nodes, sibling) // We have the sibling, append it to the nodes
+		} else {
+			// Sibling is not set so we:
+			// 1. Get the verifiedBy info for the current index (tbd what that means in english)
+			// 2. add all of the full roots of the verifiedBy node that aren't the current index to the proof nodes list
+			// 3. return the completed proof
 
-		// Update to the sibling of current index
-		sibling = ft.Sibling(currIndex)
-
-		if !t.Get(sibling) {
 			verifiedBy := t.VerifiedBy(currIndex)
 			roots, err = ft.FullRoots(verifiedBy.node)
 			if err != nil {
@@ -81,13 +83,9 @@ func (t tree) Proof(index, _digest uint64, _remoteTree tree) (proof Proof, verif
 				index:      index,
 				verifiedBy: verifiedBy.node,
 				nodes:      nodes,
-			}, true, err
-		} else {
-			nodes = append(nodes, sibling)
-		}
+			}, true, nil
 
-		// Move up the tree
-		currIndex = ft.Parent(currIndex)
+		}
 	}
 }
 
@@ -160,8 +158,4 @@ func max(x, y uint64) uint64 {
 		return x
 	}
 	return y
-}
-
-func isEven(n uint64) bool {
-	return n%2 == 0
 }
