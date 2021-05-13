@@ -299,3 +299,61 @@ func Test_ProofWithDigest1(t *testing.T) {
 	assert.Equal(t, Proof{index: 0, verifiedBy: 10, nodes: []uint64{0, 5, 8}}, proof)
 	assert.True(t, verified)
 }
+
+func Test_ProofWithDigest2(t *testing.T) {
+	t.Parallel()
+
+	tree := NewDefaultTree()
+	tree.Set(10)
+	tree.Set(8)
+	tree.Set(13)
+	tree.Set(3)
+	tree.Set(17)
+
+	proof, verified, err := tree.Proof(10, 0b1000001, NewDefaultTree())
+	assert.NoError(t, err)
+	assert.Equal(t, Proof{index: 10, verifiedBy: 20, nodes: []uint64{10, 8, 13, 3, 17}}, proof)
+	assert.True(t, verified)
+
+	proof, verified, err = tree.Proof(10, 0b10001, NewDefaultTree())
+	assert.NoError(t, err)
+	assert.Equal(t, Proof{index: 10, verifiedBy: 0, nodes: []uint64{10, 8, 13, 3}}, proof)
+	assert.True(t, verified)
+
+	proof, verified, err = tree.Proof(10, 0b1001, NewDefaultTree())
+	assert.NoError(t, err)
+	assert.Equal(t, Proof{index: 10, verifiedBy: 0, nodes: []uint64{10, 8, 13}}, proof)
+	assert.True(t, verified)
+
+	proof, verified, err = tree.Proof(10, 0b1000, NewDefaultTree())
+	assert.NoError(t, err)
+	assert.Equal(t, Proof{index: 10, verifiedBy: 20, nodes: []uint64{10, 8, 13, 17}}, proof)
+	assert.True(t, verified)
+}
+
+func Test_ProofWithDigest3(t *testing.T) {
+	t.Parallel()
+
+	tree := NewDefaultTree()
+	tree.Set(7)
+	tree.Set(16)
+	tree.Set(18)
+	tree.Set(21)
+	tree.Set(25)
+	tree.Set(28)
+
+	proof, verified, err := tree.Proof(16, 0b1, NewDefaultTree())
+	assert.NoError(t, err)
+	assert.Equal(t, Proof{index: 16, verifiedBy: 0, nodes: []uint64{16}}, proof)
+	assert.True(t, verified)
+
+	proof, verified, err = tree.Proof(18, 0b100, NewDefaultTree())
+	assert.NoError(t, err)
+	assert.Equal(t, Proof{index: 18, verifiedBy: 30, nodes: []uint64{18, 16, 7, 25, 28}}, proof)
+	assert.True(t, verified)
+
+	proof, verified, err = tree.Proof(17, 0b101, NewDefaultTree())
+	assert.NoError(t, err)
+	assert.Equal(t, Proof{index: 17, verifiedBy: 0, nodes: []uint64{17, 21}}, proof)
+	assert.True(t, verified)
+}
