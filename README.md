@@ -7,11 +7,10 @@
 Adapted from [Dat Rust](https://github.com/datrs/hypercore) and [hypercore](https://github.com/hypercore-protocol/hypercore). 
 
 
-**WIP; see module roadmap below**
+**WIP; modules completed, starting work on feeds**
 
 ## Modules
-
-- [ ] tree-index
+- [x] [tree-index](https://github.com/kiambogo/go-hypercore/blob/main/indexed/tree_index.go)
 - [x] [merkle-tree-stream](https://github.com/kiambogo/go-hypercore/blob/main/merkle/stream.go)
 - [x] [bitfield-rle](https://github.com/kiambogo/go-hypercore/blob/main/bitfield/rle.go)
 - [x] [flat-tree](https://github.com/kiambogo/go-hypercore/blob/main/flattree/tree.go)
