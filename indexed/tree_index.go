@@ -99,6 +99,8 @@ func (t tree) Proof(index, digest uint64, remoteTree tree) (proof Proof, verifie
 		digest >>= 1
 	}
 
+	next = index
+
 	for !remoteTree.Get(next) {
 		sibling = ft.Sibling(next)
 		if !t.Get(sibling) {
