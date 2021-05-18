@@ -5,7 +5,7 @@ import (
 	"math/bits"
 )
 
-// Index returns the flat-tree of the node at the provided depth and offset
+// Index returns the index of a node given its depth and offset
 func Index(depth, offset uint64) uint64 {
 	return (offset << (depth + 1)) | ((1 << depth) - 1)
 }

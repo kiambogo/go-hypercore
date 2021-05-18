@@ -15,12 +15,12 @@ func NewIterator(index uint64) *iterator {
 	return i
 }
 
-// Factor will return the current factor of the iterator
+// Index will return the current index of the iterator
 func (i iterator) Index() uint64 {
 	return i.index
 }
 
-// Factor will return the current factor of the iterator
+// Offset will return the current offset of the iterator
 func (i iterator) Offset() uint64 {
 	return i.offset
 }
